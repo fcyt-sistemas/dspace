@@ -1,0 +1,69 @@
+version: '3'
+services:
+  proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./proxy/certs:/etc/nginx/certs:ro
+      - ./proxy/html:/usr/share/nginx/html
+      - ./proxy/vhost/dspace.conf:/etc/nginx/conf.d/custom.conf:ro
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt-companion
+    volumes:
+      - ./proxy/certs:/etc/nginx/certs:rw
+      - ./proxy/acme:/etc/acme.sh
+      - ./proxy/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    depends_on:
+      - proxy
+
+  db:
+    image: postgres:14
+    container_name: dspace-db
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: dspace
+      POSTGRES_USER: dspace
+      POSTGRES_PASSWORD: dspace
+    volumes:
+      - dspace-db-data:/var/lib/postgresql/data
+      - ./create_pgcrypto.sql:/docker-entrypoint-initdb.d/create_pgcrypto.sql
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: dspace-frontend
+    expose:
+      - 4000
+    environment:
+      - VIRTUAL_HOST=repositorio.fcyt.uader.edu.ar
+      - VIRTUAL_PORT=4000
+      - LETSENCRYPT_HOST=repositorio.fcyt.uader.edu.ar
+      - LETSENCRYPT_EMAIL=fcyt_taller@uader.edu.ar
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: dspace-backend
+    expose:
+      - 8080
+    command:
+      ["bash","/start.sh"]
+    depends_on:
+      - db
+
+volumes:
+  dspace-db-data:

@@ -1,0 +1,10 @@
+dspace.dir=/build/DSpace-dspace-7.6
+dspace.server.url = http://dspace-backend:8080/server
+dspace.ui.url = https://repositorio.fcyt.uader.edu.ar
+solr.server = http://localhost:8983/solr
+db.url = jdbc:postgresql://dspace-db:5432/dspace
+db.driver = org.postgresql.Driver
+db.username = dspace
+db.password = dspace
+dspace.name = DSpace de FCYT-UADER
+dspace.shortname = Dspace-FCYT

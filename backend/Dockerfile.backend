@@ -1,0 +1,107 @@
+FROM debian:11.10
+# FROM ubuntu:22.04
+
+# Instalar dependencias
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y openjdk-11-jdk maven ant wget curl git build-essential nano mc  zip unzip 
+RUN apt-get install -y libcups2 
+RUN apt-get install -y procps
+#instalo el cliente psql
+RUN apt-get install -y postgresql-client
+
+# Configurar variables de entorno para Java
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_OPTS="-Xmx512M -Xms64M -Dfile.encoding=UTF-8"
+
+# Crear directorios necesarios
+RUN mkdir /dspace
+RUN mkdir /build
+
+# Instalar Tomcat
+#ENV CATALINA_HOME /usr/local/tomcat
+#ENV PATH $CATALINA_HOME/bin:$PATH
+#RUN mkdir -p "$CATALINA_HOME"
+#WORKDIR $CATALINA_HOME
+
+# Descargar y descomprimir Tomcat
+#RUN curl -fsSL https://downloads.apache.org/tomcat/tomcat-9/v9.0.93/bin/apache-tomcat-9.0.93-deployer.tar.gz | tar xzf - --strip-components=1
+#RUN rm -f bin/*.bat bin/*.sh
+
+# Configurar Tomcat
+#COPY tomcat-cfg-server.xml conf/server.xml
+
+
+# Establecer variables de entorno
+ENV CATALINA_HOME /usr/local/tomcat
+ENV PATH $CATALINA_HOME/bin:$PATH
+
+# Crear directorio para Tomcat
+RUN mkdir -p "$CATALINA_HOME"
+
+# Definir el directorio de trabajo
+WORKDIR $CATALINA_HOME
+
+# Descargar y descomprimir Tomcat
+RUN curl -fsSL  https://downloads.apache.org/tomcat/tomcat-9/v9.0.95/bin/apache-tomcat-9.0.95.tar.gz -o /tmp/tomcat.tar.gz && \
+    tar xzf /tmp/tomcat.tar.gz -C "$CATALINA_HOME" --strip-components=1 && \
+    rm /tmp/tomcat.tar.gz
+
+# Limpiar scripts .bat de Windows (pero NO eliminar los .sh)
+RUN rm -f bin/*.bat
+
+# Copiar configuración personalizada de Tomcat
+COPY tomcat-cfg-server.xml conf/server.xml
+
+
+# Instalar Solr 8.11.3
+WORKDIR /opt
+RUN wget https://archive.apache.org/dist/lucene/solr/8.11.3/solr-8.11.3.zip
+RUN unzip solr-8.11.3.zip
+RUN rm solr-8.11.3.zip
+RUN mv solr-8.11.3 solr
+RUN chown -R root:root /opt/solr
+
+# Configurar Solr para DSpace
+RUN mkdir -p /opt/solr/server/solr/configsets
+# Aquí deberías copiar los archivos de configuración de Solr para DSpace
+#COPY solr_config /opt/solr/server/solr/configsets
+
+# Descargar y extraer DSpace
+WORKDIR /build
+RUN wget https://github.com/DSpace/DSpace/archive/refs/tags/dspace-7.6.tar.gz
+RUN tar zxvf dspace-7.6.tar.gz
+RUN chmod 777 -R /build
+
+# Configurar DSpace
+WORKDIR /build/DSpace-dspace-7.6/dspace/config
+COPY dspace.cfg local.cfg
+
+# Aquí deberías ajustar local.cfg según tus necesidades
+# Asegúrate de configurar la URL de Solr correctamente
+#RUN sed -i 's#solr.server = http://localhost:8983/solr#solr.server = http://localhost:8983/solr#' local.cfg
+
+# Construir e instalar DSpace
+WORKDIR /build/DSpace-dspace-7.6
+RUN mvn package
+
+# Verificar el contenido del directorio dspace-installer
+RUN ls -la /build/DSpace-dspace-7.6/dspace/target/dspace-installer
+
+# Instalar DSpace
+WORKDIR /build/DSpace-dspace-7.6/dspace/target/dspace-installer
+#RUN ant fresh_install
+
+# Copiar webapps a Tomcat
+#RUN cp -R /dspace/webapps/* $CATALINA_HOME/webapps
+
+# Inicializar la base de datos
+#RUN /dspace/bin/dspace database migrate
+
+# Script de inicio
+COPY start.sh /start.sh
+RUN chmod 777 /start.sh
+
+EXPOSE 8080
+
+
+#CMD ["/start.sh"]
