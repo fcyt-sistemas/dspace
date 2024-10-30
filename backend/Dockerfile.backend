@@ -42,7 +42,7 @@ RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
 
 # Descargar y descomprimir Tomcat
-RUN curl -fsSL  https://downloads.apache.org/tomcat/tomcat-9/v9.0.95/bin/apache-tomcat-9.0.95.tar.gz -o /tmp/tomcat.tar.gz && \
+RUN curl -fsSL  https://downloads.apache.org/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.tar.gz -o /tmp/tomcat.tar.gz && \
     tar xzf /tmp/tomcat.tar.gz -C "$CATALINA_HOME" --strip-components=1 && \
     rm /tmp/tomcat.tar.gz
 

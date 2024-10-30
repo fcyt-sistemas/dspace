@@ -10,6 +10,6 @@ ui:
 
 rest:
   ssl: true
-  host: repositorio.fcyt.uader.edu.ar
+  host: prueba.fcyt.uader.edu.ar
   port: 443
   nameSpace: /server
