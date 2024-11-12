@@ -22,6 +22,16 @@ RUN yarn install
 # Copiar archivos de configuración
 COPY config.prod.yml config/config.prod.yml
 
+# Copiar archivos de personalizacion 
+#Configuracion del tema
+COPY fcyt src/themes
+
+# Copiar archivos de configuracion del tema
+COPY aeager-themes.module.ts src/themes/eager-themes.module.ts
+
+# Copiar archivos de configuracion de angular
+COPY angular.json .
+
 # Construir la aplicación
 RUN yarn build:prod
 
