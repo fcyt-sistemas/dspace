@@ -22,14 +22,15 @@ RUN yarn install
 # Copiar archivos de configuración
 COPY config.prod.yml config/config.prod.yml
 
-# Copiar archivos de personalizacion 
-#Configuracion del tema
+# Copia archivos de personalización:
+# 1. Añade un tema personalizado ("fcyt") a la carpeta `src/themes/fcyt`, donde se encuentran los temas de DSpace Angular.
 COPY fcyt src/themes
 
-# Copiar archivos de configuracion del tema
-COPY aeager-themes.module.ts src/themes/eager-themes.module.ts
+# 2. Copia el módulo de temas personalizado, `eager-themes.module.ts`, para incluir el tema "fcyt" en la aplicación.
+COPY eager-themes.module.ts src/themes/eager-themes.module.ts
 
-# Copiar archivos de configuracion de angular
+# 3. Copia el archivo de configuración de Angular `angular.json` en la raíz del proyecto,
+# para definir los temas y la configuración de compilación específica del entorno.
 COPY angular.json .
 
 # Construir la aplicación
